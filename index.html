@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e6eef6">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>🧪</text></svg>">
+<title>AgroChem Command · ศูนย์ควบคุมโรงงานเคมีเกษตร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --text:#0f1b2d; --muted:#6b7a90; --line:#e4e9f0; --panel:rgba(255,255,255,.94);
+  --blue:#2563eb; --blue-soft:#e8f0ff; --green:#16a34a; --green-soft:#e7f7ec;
+  --amber:#d97706; --amber-soft:#fff4e0; --red:#dc2626; --red-soft:#fdecec; --teal:#0d9488;
+  --shadow:0 8px 30px rgba(15,35,70,.10),0 1px 3px rgba(15,35,70,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"IBM Plex Sans Thai",system-ui,"Segoe UI",Tahoma,sans-serif;color:var(--text);background:#e6eef6}
+body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+#scene{position:fixed;inset:0}
+#scene canvas{display:block}
+.labels{position:absolute;inset:0;pointer-events:none}
+.ui{position:fixed;inset:0;pointer-events:none}
+.ui>*{pointer-events:auto}
+.card{background:var(--panel);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.7);border-radius:14px;box-shadow:var(--shadow)}
+
+header{position:absolute;left:12px;right:12px;top:12px;height:56px;display:flex;align-items:center;gap:14px;padding:0 14px}
+.brand{display:flex;align-items:center;gap:10px;min-width:210px}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#16a34a);display:grid;place-items:center;color:#fff}
+.brand b{display:block;font-size:15px;line-height:1.1}
+.brand small{color:var(--muted);font-size:11.5px}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:#f3f6fa;border:1px solid var(--line);border-radius:10px;padding:0 12px;height:36px;color:var(--muted)}
+.search input{border:0;background:transparent;outline:0;flex:1;font:inherit;font-size:13px;color:var(--text)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;white-space:nowrap}
+.chip small{color:var(--muted)}
+.live{color:var(--green);font-weight:600}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+.spacer{flex:1}
+.user{display:flex;align-items:center;gap:9px;font-size:13px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#dbe6f7;display:grid;place-items:center;font-weight:700;color:var(--blue)}
+.user small{display:block;color:var(--muted);font-size:11.5px}
+
+.kpis{position:absolute;left:12px;top:80px;display:flex;gap:10px}
+.kpi{padding:10px 14px;min-width:138px}
+.kpi .k{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:21px;font-weight:700;margin-top:2px;letter-spacing:-.2px}
+.kpi .v small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi .d{font-size:11.5px;font-weight:600}
+.up{color:var(--green)} .down{color:var(--red)}
+
+.zones{position:absolute;left:12px;top:170px;width:236px;padding:12px;max-height:calc(100vh - 170px - 222px);overflow:auto}
+.sec-title{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.zone-item{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;font-size:13px}
+.zone-item:hover{background:#f1f5fb}
+.zone-item.active{background:var(--blue-soft);color:var(--blue)}
+.zone-item .nm{flex:1;line-height:1.2}
+.zone-item .nm small{display:block;color:var(--muted);font-size:11px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--green)}
+.dot.warn{background:#f59e0b} .dot.alert{background:var(--red)} .dot.maint{background:#94a3b8}
+.tools{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.tbtn{flex:1;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px}
+.tbtn:hover{background:#f3f6fa}
+.tbtn.on{background:var(--blue-soft);border-color:#bfd3fb;color:var(--blue)}
+.tools .tbtn{white-space:nowrap;padding:0 4px;min-width:0}
+@media (max-width:1180px) and (min-width:1025px){.tools .tbtn{font-size:11px}}
+
+.side{position:absolute;right:12px;top:80px;bottom:12px;width:350px;padding:16px;overflow:auto}
+.zhead{display:flex;gap:12px;align-items:flex-start}
+.zicon{width:44px;height:44px;border-radius:12px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;flex:none}
+.zhead h2{font-size:17px;margin:0;line-height:1.25}
+.zhead p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;margin-top:6px}
+.status.ok{background:var(--green-soft);color:var(--green)}
+.status.warn{background:var(--amber-soft);color:var(--amber)}
+.status.alert{background:var(--red-soft);color:var(--red)}
+.status.maint{background:#eef1f5;color:#64748b}
+.zdesc{font-size:12.5px;color:#41506a;margin:12px 0 4px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.metric{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#fff}
+.metric .k{font-size:11.5px;color:var(--muted)}
+.metric .v{font-size:18px;font-weight:700;margin-top:1px}
+.metric .v small{font-size:11.5px;color:var(--muted);font-weight:500;margin-left:2px}
+.metric .bar{height:4px;border-radius:9px;background:#edf1f6;margin-top:6px;overflow:hidden}
+.metric .bar i{display:block;height:100%;border-radius:9px;background:var(--blue);transition:width .6s}
+.block{margin-top:16px}
+.block h3{font-size:13px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.block h3 small{font-weight:500;color:var(--muted);font-size:11.5px;text-align:right}
+.spark{border:1px solid var(--line);border-radius:11px;background:#fff;padding:8px 8px 4px}
+.list .row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid #eef2f6;font-size:12.5px}
+.list .row:last-child{border-bottom:0}
+.list .row .nm{flex:1;min-width:0}
+.list .row .nm b{font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list .row .nm small{color:var(--muted);font-size:11px}
+.list .row .val{text-align:right;font-weight:600;font-size:12px;min-width:70px}
+.mini{height:4px;width:70px;border-radius:9px;background:#edf1f6;margin-top:4px;margin-left:auto;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--green);border-radius:9px}
+.batchcard{border:1px solid #cfe0fb;background:linear-gradient(180deg,#f5f9ff,#fff);border-radius:12px;padding:11px 12px;font-size:12.5px}
+.batchcard b{font-size:13.5px}
+.batchcard .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:4px}
+.prog{height:6px;border-radius:9px;background:#e6edf7;margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#3b82f6);border-radius:9px;transition:width .6s}
+
+.bottom{position:absolute;left:12px;right:374px;bottom:12px;height:200px;display:flex;gap:10px}
+.track{flex:1.35;padding:14px 16px;min-width:0}
+.tasks{flex:1;padding:14px 14px;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+.btabs{display:flex;gap:6px}
+.btab{border:1px solid var(--line);background:#fff;border-radius:8px;padding:3px 9px;font-size:11.5px;cursor:pointer}
+.btab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.binfo{display:flex;align-items:baseline;gap:10px;margin:10px 0 2px;font-size:13px;flex-wrap:wrap}
+.binfo b{font-size:14px}
+.binfo span{color:var(--muted);font-size:12px}
+.steps{display:flex;margin-top:14px;position:relative}
+.step{flex:1;text-align:center;position:relative;cursor:pointer;font-size:11.5px}
+.step:before{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:#e3e9f2;z-index:0}
+.step:first-child:before{display:none}
+.step.done:before,.step.cur:before{background:var(--blue)}
+.step .c{width:28px;height:28px;border-radius:50%;margin:0 auto;background:#fff;border:2px solid #d6deea;display:grid;place-items:center;position:relative;z-index:1;color:#94a3b8;font-weight:700;font-size:12px}
+.step.done .c{background:var(--blue);border-color:var(--blue);color:#fff}
+.step.cur .c{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 5px rgba(37,99,235,.15)}
+.step .t{margin-top:6px;font-weight:600;line-height:1.2}
+.step .s{color:var(--muted);font-size:10.5px;margin-top:2px}
+.step:hover .t{color:var(--blue)}
+.task-list{overflow:auto;flex:1;margin-top:2px}
+.task{display:flex;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid #eef2f6;cursor:pointer;font-size:12.5px;animation:fadein .4s}
+.task:hover{background:#f6f9fd}
+@keyframes fadein{from{opacity:0;transform:translateY(-4px)}}
+.task .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;font-size:13px}
+.task .nm{flex:1;min-width:0}
+.task .nm b{font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task .nm small{color:var(--muted);font-size:11px}
+.tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.tag.r{background:var(--red-soft);color:var(--red)} .tag.a{background:var(--amber-soft);color:var(--amber)} .tag.b{background:var(--blue-soft);color:var(--blue)} .tag.g{background:var(--green-soft);color:var(--green)}
+
+.pin{pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:opacity .25s}
+.pin-card{display:flex;align-items:center;gap:7px;background:#fff;border-radius:10px;padding:5px 10px 5px 7px;box-shadow:0 4px 14px rgba(15,35,70,.16);font-size:12px;white-space:nowrap;border:1.5px solid transparent;transition:transform .2s,border-color .2s}
+.pin-card .pi{width:22px;height:22px;border-radius:7px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
+.pin-card b{font-weight:600;display:block;line-height:1.15}
+.pin-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.2}
+.pin-stem{width:2px;height:18px;background:linear-gradient(#fff,rgba(255,255,255,.2))}
+.pin:hover .pin-card{transform:translateY(-2px)}
+.pin.active .pin-card{border-color:var(--blue);transform:scale(1.05)}
+.pin.warn .pin-card .pi{background:var(--amber-soft);color:var(--amber)}
+.pin.maint .pin-card .pi{background:#eef1f5;color:#64748b}
+.pin.alert .pin-card .pi{background:var(--red-soft);color:var(--red)}
+.hide-labels .pin{opacity:0;pointer-events:none}
+
+.toast{position:absolute;left:50%;top:80px;transform:translate(-50%,-20px);opacity:0;padding:10px 14px;display:flex;gap:10px;align-items:center;font-size:13px;transition:.35s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.hint{position:absolute;left:calc(50% - 57px);bottom:222px;transform:translateX(-50%);font-size:11.5px;color:#56657c;background:rgba(255,255,255,.75);padding:4px 10px;border-radius:99px;pointer-events:none;white-space:nowrap}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:#e6eef6;z-index:9;color:var(--muted);font-size:14px;transition:opacity .5s}
+
+.sheet{display:contents}
+.sheet-head,.icon-btn{display:none}
+.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;place-items:center;cursor:pointer;flex:none;color:var(--muted)}
+@media (max-width:1380px){.kpi:nth-child(5){display:none}}
+@media (max-width:1180px){.kpi:nth-child(4){display:none}.zones{width:214px}.user>div:last-child,.chip.shift{display:none}}
+
+/* tablet portrait & mobile: bottom sheet layout */
+@media (max-width:1024px){
+  header{left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));height:52px;padding:0 8px 0 10px;gap:8px}
+  .brand{min-width:0;flex:1}
+  .brand>div:last-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search{display:none}
+  header.searching .brand{display:none}
+  header.searching .search{display:flex;flex:1;max-width:none}
+  .icon-btn{display:grid}
+  .chip.plant,.chip.shift,.user,.spacer{display:none}
+  .kpis{left:0;right:0;top:calc(68px + env(safe-area-inset-top));padding:0 8px 6px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory}
+  .kpis::-webkit-scrollbar{display:none}
+  .kpi,.kpi:nth-child(4),.kpi:nth-child(5){display:block;min-width:132px;padding:8px 12px;scroll-snap-align:start;flex:none}
+  .kpi .v{font-size:18px}
+  .hint{display:none}
+  .sheet{display:flex;flex-direction:column;position:absolute;left:0;right:0;bottom:0;height:var(--sheet-h,44dvh);background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px rgba(15,35,70,.14);transition:height .3s ease;padding-bottom:env(safe-area-inset-bottom);overflow:hidden}
+  .sheet.collapsed{height:calc(92px + env(safe-area-inset-bottom))}
+  .sheet-head{display:block;padding:2px 12px 10px;border-bottom:1px solid var(--line);flex:none}
+  .grabwrap{padding:8px 0 10px;cursor:pointer;touch-action:none}
+  .grab{width:44px;height:5px;border-radius:9px;background:#cbd5e1;margin:0 auto}
+  .stabs{display:flex;gap:6px}
+  .stab{flex:1;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;white-space:nowrap;padding:0 6px}
+  .stab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .bottom{display:contents}
+  .pane{display:none!important;position:static!important;width:auto!important;height:auto!important;max-height:none!important;flex:1;min-height:0;overflow:auto!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:14px 16px 18px!important}
+  .pane.on{display:block!important}
+  .tasks.pane.on{display:flex!important}
+  .track .sec-title{flex-wrap:wrap}
+  .zone-item{padding:10px 8px}
+  .toast{top:calc(150px + env(safe-area-inset-top));max-width:calc(100% - 24px);width:max-content}
+  .step{min-width:0}
+  .pin-card{font-size:11px;padding:4px 8px 4px 5px;gap:5px}
+  .pin-card .pi{width:18px;height:18px}
+  .pin-card small{display:none}
+  .pin.active .pin-card small{display:block}
+  .pin-stem{height:12px}
+}
+@media (max-width:600px){
+  .brand small,.live small{display:none}
+  .brand b{font-size:14px}
+  .kpi,.kpi:nth-child(4),.kpi:nth-child(5){min-width:108px;padding:6px 10px}
+  .kpi .v{font-size:16px}
+  .kpi .d span{display:none}
+  .sheet{--sheet-h:45dvh}
+  .stab{font-size:12px;padding:0 4px}
+  .step .t{font-size:10.5px}
+  .step .s{display:none}
+  .pin:not(.active) .pin-card{padding:4px}
+  .pin:not(.active) .pin-card>span:last-child{display:none}
+}
+/* phone landscape: sheet docks to the right */
+@media (max-width:1024px) and (orientation:landscape) and (max-height:520px){
+  .kpis{display:none}
+  .sheet{left:auto;width:min(380px,50vw);height:calc(100dvh - 68px);border-radius:20px 0 0 0}
+  .sheet.collapsed{height:92px}
+  .toast{top:70px}
+}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="scene"></div>
+<div class="loading" id="loading">กำลังโหลดโรงงาน 3D…</div>
+
+<div class="ui" id="ui">
+  <header class="card">
+    <div class="brand">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 8.5A2 2 0 0 0 6.7 21h10.6a2 2 0 0 0 1.7-3.5L14 9V3"/><path d="M8 15c2-1.5 4 1.5 8 0"/></svg></div>
+      <div><b>AgroChem Command</b><small>ศูนย์ควบคุมโรงงานเคมีเกษตร</small></div>
+    </div>
+    <label class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" placeholder="ค้นหาโซน แบตช์ หรือสินค้า เช่น R-02, ไกลโฟเซต แล้วกด Enter"></label>
+    <button class="icon-btn" id="btnSearch" aria-label="ค้นหา"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <div class="spacer"></div>
+    <div class="chip plant">🏭 <span>โรงงานบางปะกง</span><small>ฉะเชิงเทรา</small></div>
+    <div class="chip live"><i></i>LIVE <small id="clock">--:--:--</small></div>
+    <div class="chip shift"><small>กะ</small> B · 14:00–22:00</div>
+    <div class="user"><div class="avatar">สว</div><div>สมชาย วงศ์ใหญ่<small>ผู้จัดการฝ่ายผลิต</small></div></div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sheet" id="sheet">
+  <div class="sheet-head">
+    <div class="grabwrap" id="grab"><div class="grab"></div></div>
+    <div class="stabs"><button class="stab" data-pane="side">รายละเอียด</button><button class="stab" data-pane="batch">แบตช์</button><button class="stab" data-pane="tasks">แจ้งเตือน</button><button class="stab" data-pane="zones">โซน</button></div>
+  </div>
+  <div class="zones card pane" data-pane="zones">
+    <div class="sec-title">โซนในโรงงาน <span id="zoneCount"></span></div>
+    <div id="zoneList"></div>
+    <div class="tools">
+      <button class="tbtn" id="btnHome" title="กลับมุมมองรวม">⌂ ภาพรวม</button>
+      <button class="tbtn on" id="btnRotate" title="หมุนกล้องอัตโนมัติ">⟳ หมุน</button>
+      <button class="tbtn on" id="btnLabels" title="แสดงป้ายชื่อ">◉ ป้าย</button>
+    </div>
+  </div>
+
+  <aside class="side card pane" data-pane="side" id="side"></aside>
+
+  <div class="bottom">
+    <section class="track card pane" data-pane="batch">
+      <div class="sec-title" style="margin:0">ติดตามแบตช์การผลิต <div class="btabs" id="btabs"></div></div>
+      <div class="binfo" id="binfo"></div>
+      <div class="steps" id="steps"></div>
+    </section>
+    <section class="tasks card pane" data-pane="tasks">
+      <div class="sec-title">งานและการแจ้งเตือน <span id="taskCount" class="tag b"></span></div>
+      <div class="task-list" id="tasks"></div>
+    </section>
+  </div>
+  </div>
+  <div class="hint">ลากเพื่อหมุน · คลิกขวาลากเพื่อเลื่อน · ลูกกลิ้งเพื่อซูม · คลิกอาคารเพื่อดูรายละเอียด</div>
+  <div class="toast card" id="toast"></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const I = {
+  box:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  tank:'<ellipse cx="12" cy="5" rx="7" ry="2.5"/><path d="M5 5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V5"/><path d="M5 11c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/>',
+  flask:'<path d="M9 3h6M10 3v6l-5 8.5A2 2 0 0 0 6.7 21h10.6a2 2 0 0 0 1.7-3.5L14 9V3"/>',
+  bottle:'<path d="M10 2h4v3l2 3v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8l2-3z"/><path d="M8 12h8"/>',
+  lab:'<path d="M6 3h12M8 3v18M16 3v18M4 21h16M8 9h8M8 15h8"/>',
+  ware:'<path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-8h10v8M7 17h10"/>',
+  drop:'<path d="M12 3s7 7.5 7 12a7 7 0 0 1-14 0c0-4.5 7-12 7-12z"/>',
+  truck:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+};
+const icon = (n,s=16)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>';
+
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const fmt = (v,d=0)=>Number(v).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const STATUS = {ok:'ทำงานปกติ',warn:'เฝ้าระวัง',alert:'ผิดปกติ',maint:'ซ่อมบำรุงบางส่วน'};
+
+const zones = {
+  raw:{name:'คลังวัตถุดิบ',en:'Raw Material Store',icon:'box',status:'ok',pos:[-40,-20],h:13,
+    desc:'จัดเก็บสารออกฤทธิ์ (AI) ตัวทำละลาย สารลดแรงตึงผิว และสารเติมแต่ง ควบคุมอุณหภูมิและแยกโซนสารไวไฟ',
+    metrics:[{k:'พื้นที่ใช้งาน',v:72,u:'%',d:0,j:.6,bar:1},{k:'รายการวัตถุดิบ',v:148,u:'SKU',d:0,j:0},{k:'อุณหภูมิห้อง',v:27.4,u:'°C',d:1,j:.2},{k:'ความชื้น',v:58,u:'%RH',d:0,j:1}],
+    pinKey:0, sparkLabel:'รับวัตถุดิบเข้า (ตัน/ชม.)', spark:[2,3,2.5,4,3.6,5,4.2,3.8,4.9,5.3,4.6,5.1],
+    listTitle:'วัตถุดิบหลัก', list:[
+      {n:'ไกลโฟเซต เทคนิค 95%',s:'Lot GT-2609-18 · หมดอายุ 03/2028',v:'12.4 ตัน',p:62},
+      {n:'อะบาเม็กติน เทคนิค 95%',s:'Lot AB-2608-04 · ต่ำกว่าจุดสั่งซื้อ',v:'0.8 ตัน',p:24,low:1},
+      {n:'โซลเวนต์ Solvesso 150',s:'ถังเก็บ T-01',v:'18.6 kL',p:71},
+      {n:'สารลดแรงตึงผิว Nonionic',s:'IBC 24 ถัง',v:'9.2 ตัน',p:55},
+      {n:'ยูเรีย 46-0-0',s:'กระสอบ 50 กก.',v:'34 ตัน',p:83}]},
+  tankfarm:{name:'ลานถังเก็บสารเคมี',en:'Tank Farm',icon:'tank',status:'ok',pos:[-40,12],h:15,
+    desc:'ถังเก็บของเหลวขนาดใหญ่ 4 ถัง มีคันกั้นสารรั่วไหล (bund wall) และเซนเซอร์วัดระดับแบบเรียลไทม์',
+    metrics:[{k:'ปริมาณรวม',v:146,u:'kL',d:0,j:.8},{k:'ความจุใช้งาน',v:66,u:'%',d:0,j:.3,bar:1},{k:'แรงดันท่อ',v:2.4,u:'bar',d:1,j:.05},{k:'ตรวจพบไอระเหย',v:0,u:'ppm',d:0,j:0}],
+    pinKey:0, sparkLabel:'ปริมาณรวม (kL)', spark:[130,132,135,138,140,139,142,144,143,145,146,146],
+    listTitle:'ระดับในถัง', list:[
+      {n:'T-01 · โซลเวนต์ Solvesso 150',s:'ความจุ 60 kL',v:'44.8 kL',p:75},
+      {n:'T-02 · น้ำ DI',s:'ความจุ 60 kL',v:'51.2 kL',p:85},
+      {n:'T-03 · ไกลโฟเซต IPA เข้มข้น',s:'ความจุ 50 kL',v:'38.1 kL',p:76},
+      {n:'T-04 · ปุ๋ยน้ำ Base',s:'ความจุ 50 kL',v:'12.4 kL',p:25,low:1}]},
+  reactor:{name:'อาคารผสมและทำปฏิกิริยา',en:'Mixing & Reactor Hall',icon:'flask',status:'ok',pos:[-8,-20],h:21,
+    desc:'ถังผสม R-01 ถึง R-03 ขนาด 10,000 ลิตร พร้อมระบบควบคุมอุณหภูมิ ใบกวน และระบบดูดไอสารเคมี',
+    metrics:[{k:'อุณหภูมิ R-02',v:42.6,u:'°C',d:1,j:.4},{k:'ความเร็วใบกวน',v:120,u:'rpm',d:0,j:2},{k:'แรงดันถัง',v:1.3,u:'bar',d:1,j:.05},{k:'ใช้กำลังการผลิต',v:81,u:'%',d:0,j:1,bar:1}],
+    pinKey:0, sparkLabel:'อุณหภูมิ R-02 (°C)', spark:[38,39,40.5,41,42,42.2,41.8,42.5,42.9,42.4,42.7,42.6],
+    listTitle:'ถังผสม', list:[
+      {n:'R-01 · ปุ๋ยน้ำ 15-15-15',s:'ขั้นตอน: ปรับ pH',v:'78%',p:78},
+      {n:'R-02 · ไกลโฟเซต 48% SL',s:'ขั้นตอน: ผสมสารลดแรงตึงผิว',v:'52%',p:52},
+      {n:'R-03 · อะบาเม็กติน 1.8% EC',s:'ขั้นตอน: ละลายสารออกฤทธิ์',v:'31%',p:31}]},
+  filling:{name:'ไลน์บรรจุ',en:'Filling & Packing Line',icon:'bottle',status:'ok',pos:[-6,12],h:12,
+    desc:'บรรจุขวด 100 มล. ถึงแกลลอน 20 ลิตร ติดฉลาก ปิดฝาซีล และพิมพ์ Lot อัตโนมัติ ส่งเข้าคลังผ่านสายพานลอยฟ้า',
+    metrics:[{k:'ความเร็วไลน์',v:2410,u:'ขวด/ชม.',d:0,j:40},{k:'OEE ไลน์',v:86,u:'%',d:0,j:.8,bar:1},{k:'ของเสีย',v:0.7,u:'%',d:1,j:.08},{k:'บรรจุวันนี้',v:18420,u:'ขวด',d:0,j:0,inc:6}],
+    pinKey:0, sparkLabel:'อัตราบรรจุ (ขวด/ชม.)', spark:[2100,2250,2300,2180,2400,2450,2380,2420,2390,2460,2400,2410],
+    listTitle:'สถานะเครื่องจักร', list:[
+      {n:'L1 · ขวด 1 ลิตร',s:'ไกลโฟเซต 48% SL',v:'1,320/ชม.',p:92},
+      {n:'L2 · ขวด 500 มล.',s:'อะบาเม็กติน 1.8% EC',v:'1,090/ชม.',p:84},
+      {n:'L3 · แกลลอน 20 ลิตร',s:'รอเปลี่ยนสูตร',v:'หยุดชั่วคราว',p:0,low:1}]},
+  qc:{name:'ห้องปฏิบัติการ QC',en:'Quality Control Lab',icon:'lab',status:'ok',pos:[26,-28],h:10,
+    desc:'วิเคราะห์ปริมาณสารออกฤทธิ์ด้วย HPLC/GC ตรวจ pH ความหนืด และความคงตัวของสูตรก่อนปล่อยแบตช์',
+    metrics:[{k:'ตัวอย่างรอตรวจ',v:14,u:'ตัวอย่าง',d:0,j:0},{k:'ผ่านเกณฑ์',v:96.8,u:'%',d:1,j:.1,bar:1},{k:'เวลาตรวจเฉลี่ย',v:3.2,u:'ชม.',d:1,j:.05},{k:'เครื่อง HPLC ว่าง',v:2,u:'/ 3',d:0,j:0}],
+    pinKey:0, sparkLabel:'ตัวอย่างที่ตรวจเสร็จ (ต่อชม.)', spark:[3,4,2,5,4,6,5,4,6,5,7,6],
+    listTitle:'ผลตรวจล่าสุด', list:[
+      {n:'B-2610-0410 · ปุ๋ยน้ำ 15-15-15',s:'N-P-K ตามสเปก',v:'ผ่าน',p:100},
+      {n:'B-2610-0411 · คาร์เบนดาซิม 50% SC',s:'ความหนืดสูงกว่าเกณฑ์',v:'ตรวจซ้ำ',p:40,low:1},
+      {n:'B-2610-0412 · ไกลโฟเซต 48% SL',s:'HPLC กำลังวิเคราะห์',v:'กำลังตรวจ',p:65}]},
+  fg:{name:'คลังสินค้าสำเร็จรูป',en:'Finished Goods Warehouse',icon:'ware',status:'ok',pos:[36,9],h:14,
+    desc:'จัดเก็บสินค้าพร้อมขายบนชั้นวางพาเลท 5 ชั้น ระบบ FEFO และสแกนบาร์โค้ดทุกพาเลท',
+    metrics:[{k:'พาเลทในคลัง',v:1412,u:'พาเลท',d:0,j:3},{k:'พื้นที่ใช้งาน',v:78,u:'%',d:0,j:.4,bar:1},{k:'ออเดอร์รอจัด',v:37,u:'ออเดอร์',d:0,j:0},{k:'ความแม่นยำสต็อก',v:99.6,u:'%',d:1,j:0}],
+    pinKey:0, sparkLabel:'พาเลทเข้า–ออก (ต่อชม.)', spark:[22,28,25,31,35,30,27,33,38,36,34,32],
+    listTitle:'สินค้าคงคลังสูงสุด', list:[
+      {n:'ไกลโฟเซต 48% SL · 1 ลิตร',s:'12 ขวด/ลัง',v:'8,640 ลัง',p:88},
+      {n:'ปุ๋ยน้ำ 15-15-15 · 20 ลิตร',s:'แกลลอน',v:'2,150 แกลลอน',p:64},
+      {n:'อะบาเม็กติน 1.8% EC · 500 มล.',s:'20 ขวด/ลัง',v:'1,980 ลัง',p:47},
+      {n:'คาร์เบนดาซิม 50% SC · 1 ลิตร',s:'12 ขวด/ลัง',v:'640 ลัง',p:18,low:1}]},
+  wwt:{name:'ระบบบำบัดน้ำเสีย',en:'Wastewater Treatment',icon:'drop',status:'maint',pos:[48,-24],h:6,
+    desc:'บำบัดน้ำล้างถังและน้ำฝนปนเปื้อนก่อนปล่อย ตรวจวัด COD และ pH อัตโนมัติ ตามเกณฑ์น้ำทิ้งโรงงานอุตสาหกรรม',
+    metrics:[{k:'COD ขาออก',v:86,u:'mg/L',d:0,j:2},{k:'อัตราไหลเข้า',v:12.8,u:'m³/ชม.',d:1,j:.3},{k:'pH ขาออก',v:7.2,u:'',d:1,j:.05},{k:'ความจุบ่อ',v:46,u:'%',d:0,j:.4,bar:1}],
+    pinKey:0, sparkLabel:'COD ขาออก (mg/L) · เกณฑ์ ≤ 120', spark:[92,90,95,88,86,89,84,87,85,88,86,86],
+    listTitle:'อุปกรณ์', list:[
+      {n:'ปั๊มเติมอากาศ P-01',s:'ทำงาน 98 ชม. ต่อเนื่อง',v:'ปกติ',p:100},
+      {n:'ปั๊มเติมอากาศ P-02',s:'เปลี่ยนซีลตามแผน PM',v:'ซ่อมบำรุง',p:30,low:1},
+      {n:'เครื่องกวาดตะกอน C-01',s:'1.2 รอบ/ชม.',v:'ปกติ',p:100}]},
+  dock:{name:'ลานขนส่งสินค้า',en:'Shipping Dock',icon:'truck',status:'ok',pos:[36,25],h:6,
+    desc:'จุดขึ้นสินค้า 4 ช่อง รองรับรถ 6–10 ล้อ จัดคิวรถอัตโนมัติและตรวจเอกสารขนส่งวัตถุอันตราย (UN Number)',
+    metrics:[{k:'ออกแล้ววันนี้',v:11,u:'เที่ยว',d:0,j:0},{k:'ส่งตรงเวลา',v:97.2,u:'%',d:1,j:.05,bar:1},{k:'รถรอขึ้นสินค้า',v:3,u:'คัน',d:0,j:0},{k:'เวลาขึ้นเฉลี่ย',v:38,u:'นาที',d:0,j:1}],
+    pinKey:0, sparkLabel:'เที่ยวรถออก (สะสมวันนี้)', spark:[0,1,1,2,3,4,5,6,8,9,10,11],
+    listTitle:'คิวรถวันนี้', list:[
+      {n:'70-4821 · ร้านเกษตรรุ่งเรือง',s:'นครสวรรค์ · 6 พาเลท',v:'กำลังขึ้น',p:60},
+      {n:'81-2290 · สหกรณ์การเกษตรบ้านไร่',s:'อุทัยธานี · 10 พาเลท',v:'15:40',p:0},
+      {n:'70-1557 · AgriMart สาขาขอนแก่น',s:'ขอนแก่น · 8 พาเลท',v:'16:20',p:0}]},
+};
+const zoneIds = Object.keys(zones);
+
+const batches = [
+  {id:'B-2610-0412',prod:'ไกลโฟเซต 48% SL',size:'8,000 ลิตร',cust:'ล็อตส่งภาคกลาง',step:2,pct:65,times:['08:10','09:35','13:20','—','—','—']},
+  {id:'B-2610-0413',prod:'อะบาเม็กติน 1.8% EC',size:'2,500 ลิตร',cust:'ออเดอร์ AgriMart',step:1,pct:31,times:['10:05','12:40','—','—','—','—']},
+  {id:'B-2610-0409',prod:'ปุ๋ยน้ำ 15-15-15',size:'12,000 ลิตร',cust:'สหกรณ์การเกษตรบ้านไร่',step:5,pct:60,times:['เมื่อวาน','เมื่อวาน','07:30','10:15','12:50','14:30']},
+];
+const STEPS = [['รับวัตถุดิบ','raw'],['ชั่งและผสม','reactor'],['ตรวจ QC','qc'],['บรรจุ','filling'],['เข้าคลัง','fg'],['จัดส่ง','dock']];
+
+let tasks = [
+  {t:'r',ic:'⚠️',title:'แรงดันถัง R-03 แกว่งเกินช่วงปกติ',zone:'reactor',time:'14:52',tag:'ด่วน'},
+  {t:'a',ic:'🧪',title:'B-2610-0411 ความหนืดเกินเกณฑ์ ต้องตรวจซ้ำ',zone:'qc',time:'14:31',tag:'รอตรวจ'},
+  {t:'b',ic:'🔧',title:'PM ปั๊มเติมอากาศ P-02 (เปลี่ยนซีล)',zone:'wwt',time:'14:00',tag:'กำลังทำ'},
+  {t:'a',ic:'📦',title:'อะบาเม็กติน เทคนิค ต่ำกว่าจุดสั่งซื้อ',zone:'raw',time:'13:45',tag:'สั่งซื้อ'},
+  {t:'b',ic:'🔄',title:'L3 เปลี่ยนสูตรเป็นปุ๋ยน้ำ 20 ลิตร',zone:'filling',time:'13:20',tag:'กำลังทำ'},
+  {t:'g',ic:'🚚',title:'รถ 70-9034 ออกจากโรงงาน ส่งตรงเวลา',zone:'dock',time:'12:58',tag:'เสร็จ'},
+];
+
+const kpis = [
+  {k:'ผลผลิตวันนี้',v:18420,u:'ลิตร',d:'+6.2%',up:1,dec:0},
+  {k:'OEE รวม',v:84.7,u:'%',d:'+1.4%',up:1,dec:1},
+  {k:'แบตช์ผ่าน QC',v:96.8,u:'%',d:'+0.5%',up:1,dec:1},
+  {k:'ใช้พลังงาน',v:3.42,u:'MWh',d:'-3.1%',up:1,dec:2},
+  {k:'วันปลอดอุบัติเหตุ',v:214,u:'วัน',d:'สถิติใหม่',up:1,dec:0},
+];
+
+const host = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+const LOW = matchMedia('(max-width:1024px)').matches || navigator.maxTouchPoints>0;
+renderer.setPixelRatio(Math.min(devicePixelRatio,LOW?1.75:2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+host.appendChild(renderer.domElement);
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth,innerHeight);
+labelRenderer.domElement.className = 'labels';
+host.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#e6eef6');
+scene.fog = new THREE.Fog('#e6eef6',190,380);
+
+const camera = new THREE.PerspectiveCamera(30,innerWidth/innerHeight,1,800);
+const HOME_T = new THREE.Vector3(2,0,-4), HOME_DIR = new THREE.Vector3(106,118,162).normalize();
+const isSheet = ()=>matchMedia('(max-width:1024px)').matches;
+// the part of the screen not covered by panels; the 3D scene is centred there
+function freeRect(){
+  const W=innerWidth, H=innerHeight, q=s=>document.querySelector(s);
+  if(isSheet()){
+    const s=q('#sheet').getBoundingClientRect(), k=q('#kpis');
+    const top=(getComputedStyle(k).display!=='none'?k.getBoundingClientRect().bottom:q('header').getBoundingClientRect().bottom)+6;
+    if(s.left>10) return {l:0,r:s.left,t:top,b:H};
+    return {l:0,r:W,t:top,b:Math.max(top+80,s.top)};
+  }
+  return {l:W>900?260:0, r:W-374, t:170, b:H-224};
+}
+function frameView(){
+  const W=innerWidth, H=innerHeight, f=freeRect();
+  camera.aspect=W/H;
+  camera.setViewOffset(W,H,W/2-(f.l+f.r)/2,H/2-(f.t+f.b)/2,W,H);
+}
+let homeD=235;
+// camera distance that fits the whole plant inside the free area
+function homePose(){
+  const f=freeRect(), H=innerHeight;
+  const fracH=Math.max(.2,(f.b-f.t)/H), asp=(f.r-f.l)/Math.max(1,f.b-f.t);
+  const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const phone=innerWidth<=600;
+  homeD=THREE.MathUtils.clamp(Math.max((phone?50:isSheet()?62:75)/(tan*fracH*asp),(phone?34:39.6)/(tan*fracH)),180,700);
+  scene.fog.near=homeD*.85; scene.fog.far=homeD*1.75; controls.maxDistance=Math.max(300,homeD*1.4);
+  return {target:HOME_T.clone(), pos:HOME_T.clone().add(HOME_DIR.clone().multiplyScalar(homeD))};
+}
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = .08;
+controls.maxPolarAngle = 1.22; controls.minDistance = 35; controls.maxDistance = 300;
+frameView(); { const h=homePose(); camera.position.copy(h.pos); controls.target.copy(h.target); }
+controls.screenSpacePanning = false;
+controls.autoRotateSpeed = .25;
+
+scene.add(new THREE.HemisphereLight(0xffffff,0xa9c49a,1.6));
+const sun = new THREE.DirectionalLight(0xffffff,2.6);
+sun.position.set(70,120,50);
+sun.castShadow = true;
+sun.shadow.mapSize.set(LOW?2048:4096,LOW?2048:4096);
+Object.assign(sun.shadow.camera,{left:-120,right:120,top:110,bottom:-110,near:10,far:350});
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+scene.add(sun);
+
+const matCache = {};
+const M = (c,o={})=>{const key=c+JSON.stringify(o); return matCache[key] ||= new THREE.MeshStandardMaterial({color:c,roughness:.75,metalness:0,...o});};
+function mesh(geo,mat,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function box(w,h,d,c,parent,x=0,y=0,z=0,o){return mesh(new THREE.BoxGeometry(w,h,d),typeof c==='string'?M(c,o):c,parent,x,y+h/2,z);}
+function cyl(r,h,c,parent,x=0,y=0,z=0,seg=24,o){return mesh(new THREE.CylinderGeometry(r,r,h,seg),typeof c==='string'?M(c,o):c,parent,x,y+h/2,z);}
+
+let seed = 7; const srand = ()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646;};
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(900,900),M('#cfe2b8'));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+box(160,.3,104,'#eef1f5',scene,0,0,-5);
+const roadM = M('#c3cad5'), dashM = M('#ffffff');
+function road(x1,z1,x2,z2,w){
+  const len=Math.hypot(x2-x1,z2-z1), horiz=Math.abs(x2-x1)>Math.abs(z2-z1);
+  const r=box(horiz?len+w:w,.12,horiz?w:len+w,roadM,scene,(x1+x2)/2,.3,(z1+z2)/2); r.castShadow=false;
+  for(let s=-len/2+3;s<len/2-2;s+=6){ const d=box(horiz?2.6:.35,.03,horiz?.35:2.6,dashM,scene,horiz?(x1+x2)/2+s:x1,.42,horiz?z1:(z1+z2)/2+s); d.castShadow=false; }
+}
+road(-66,-42,66,-42,7); road(-66,32,150,32,7); road(-66,-42,-66,32,7); road(66,-42,66,32,7);
+road(-66,-4,66,-4,6); road(14,-42,14,32,6);
+
+function tree(x,z,s=1){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  cyl(.35*s,1.6*s,'#8b6b4a',g,0,0,0,8);
+  const c=['#5fa463','#4f9a59','#6cb26b','#7bbd6d'][Math.floor(srand()*4)];
+  const f=mesh(new THREE.IcosahedronGeometry(1.9*s,0),M(c,{flatShading:true}),g,0,2.9*s,0);
+  f.rotation.y=srand()*3;
+  if(srand()>.5) mesh(new THREE.IcosahedronGeometry(1.3*s,0),M(c,{flatShading:true}),g,.8*s,4.1*s,.3*s);
+}
+for(let i=0;i<120;i++){
+  const a=srand()*Math.PI*2, r=95+srand()*80;
+  const x=Math.cos(a)*r*1.15, z=Math.sin(a)*r*.85-5;
+  if(Math.abs(z-32)<7 && x>60) continue;
+  tree(x,z,.8+srand()*.7);
+}
+for(let x=-60;x<=60;x+=10){ if(Math.abs(x-14)>6) tree(x,38.5,.75); }
+for(let z=-36;z<=26;z+=9){ tree(-72,z,.8); tree(72,z,.8); }
+
+const pickables=[]; const zoneGroups={};
+function zoneGroup(id){const g=new THREE.Group(); g.userData.zone=id; scene.add(g); zoneGroups[id]=g; return g;}
+function registerPick(g){ g.traverse(o=>{ if(o.isMesh){ o.userData.zone=g.userData.zone; pickables.push(o);} }); }
+
+function warehouse(g,w,h,d,body,roof,doorSide=1,doors=3){
+  box(w,h,d,body,g,0,0,0);
+  box(w+.6,.6,d+.6,roof,g,0,h,0);
+  box(w-1,.4,d-1,'#e9eef5',g,0,h+.6,0);
+  box(w+.05,1.1,d+.05,'#cfe1f7',g,0,h-2.6,0,{roughness:.3,metalness:.1});
+  for(let i=0;i<doors;i++){ const x=-w/2+(i+1)*w/(doors+1); box(3.2,4.2,.3,'#dfe5ec',g,x,0,doorSide*(d/2+.05)); box(3.6,.3,.5,'#94a3b8',g,x,4.2,doorSide*(d/2+.1)); }
+}
+function solar(g,w,d,y){ for(let x=-w/2+2;x<w/2-1;x+=3.2) for(let z=-d/2+2;z<d/2-1;z+=2.6){ const p=box(2.8,.15,2.1,'#1e3a8a',g,x,y,z,{roughness:.3,metalness:.4}); p.rotation.x=-.2; } }
+
+{ const g=zoneGroup('raw'); g.position.set(-40,0,-20);
+  warehouse(g,26,10,18,'#2f6fe0','#255bc0',1,3); solar(g,22,14,11.1);
+  for(let i=0;i<4;i++) for(let j=0;j<2;j++){ box(2.6,.3,2.6,'#c79a62',g,-11+i*3,0,12+j*3);
+    for(let a=0;a<2;a++)for(let b=0;b<2;b++) cyl(.55,1.4,i%2?'#f2b705':'#1d4ed8',g,-11.6+i*3+a*1.2,.3,11.4+j*3+b*1.2,14); }
+  registerPick(g); }
+
+{ const g=zoneGroup('tankfarm'); g.position.set(-40,0,12);
+  box(24,.2,18,'#d7dde5',g,0,0,0);
+  [[-12,0,.6,18],[12,0,.6,18],[0,-9,24,.6],[0,9,24,.6]].forEach(([x,z,w,d])=>box(w,1.4,d,'#b9c2ce',g,x,0,z));
+  const bands=['#f2b705','#38bdf8','#16a34a','#a855f7'];
+  [[-5.5,-4],[5.5,-4],[-5.5,4],[5.5,4]].forEach(([x,z],i)=>{
+    cyl(3.6,11,'#f5f7fa',g,x,.2,z,32,{metalness:.25,roughness:.45});
+    mesh(new THREE.SphereGeometry(3.6,32,12,0,Math.PI*2,0,Math.PI/2),M('#eef1f5',{metalness:.25,roughness:.45}),g,x,11.2,z).scale.y=.35;
+    cyl(3.68,.9,bands[i],g,x,7.5,z,32);
+    box(.3,11,.6,'#94a3b8',g,x+3.7,.2,z);
+  });
+  const pipeM=M('#9aa6b5',{metalness:.5,roughness:.4});
+  const p1=mesh(new THREE.CylinderGeometry(.35,.35,22,10),pipeM,g,11,6,-12); p1.rotation.x=Math.PI/2;
+  const p2=mesh(new THREE.CylinderGeometry(.35,.35,25,10),pipeM,g,23.5,6,-23); p2.rotation.z=Math.PI/2;
+  for(const z of [-6,-14,-20]) box(.4,6,.4,'#94a3b8',g,11,0,z);
+  registerPick(g); }
+
+let agitators=[], smokeSrc;
+{ const g=zoneGroup('reactor'); g.position.set(-8,0,-20);
+  box(20,10,16,'#e3e9f1',g,0,0,0); box(20.6,.6,16.6,'#2f6fe0',g,0,10,0);
+  box(20.05,1,16.05,'#2f6fe0',g,0,3.2,0);
+  box(4,5,.3,'#cbd5e1',g,-5,0,8.05); box(4,5,.3,'#cbd5e1',g,5,0,8.05);
+  [-6,0,6].forEach((x,i)=>{
+    cyl(2.4,5,'#dfe5ec',g,x,10.6,-1.5,28,{metalness:.55,roughness:.3});
+    mesh(new THREE.ConeGeometry(2.4,1.4,28),M('#cfd7e1',{metalness:.55,roughness:.3}),g,x,16.3,-1.5);
+    box(1.2,1.2,1.2,'#2f6fe0',g,x,17,-1.5);
+    const ag=box(3,.15,.3,'#f2b705',g,x,18.3,-1.5); agitators.push(ag);
+  });
+  box(18,.25,2,'#94a3b8',g,0,13,3);
+  for(const x of [-8.5,8.5]) box(.2,2.5,.2,'#64748b',g,x,10.6,4);
+  cyl(.9,22,'#f5f7fa',g,8,0,-6.5,16);
+  [6,12,18].forEach(y=>cyl(.95,1.2,'#dc2626',g,8,y,-6.5,16));
+  smokeSrc=new THREE.Vector3(0,22.5,-26.5);
+  registerPick(g); }
+
+let cartons=[];
+{ const g=zoneGroup('filling'); g.position.set(-6,0,12);
+  box(22,8,12,'#f1f4f8',g,0,0,0); box(22.6,.5,12.6,'#16a34a',g,0,8,0);
+  for(let x=-8;x<=8;x+=4){ box(2.4,.5,10,'#bfe3ff',g,x,8.5,0,{roughness:.2,metalness:.1}); }
+  box(22.05,1.4,12.05,'#16a34a',g,0,1,0);
+  box(5,4.5,.3,'#cbd5e1',g,-5,0,6.05);
+  const len=19, cx=11+len/2;
+  box(len,.5,2.2,'#64748b',g,cx,5,1);
+  box(len,.9,.15,'#94a3b8',g,cx,5.5,0); box(len,.9,.15,'#94a3b8',g,cx,5.5,2);
+  for(let x=13;x<=29;x+=4) box(.4,5,.4,'#94a3b8',g,x,0,1);
+  for(let i=0;i<7;i++){ const c=box(1.2,1,1.2,'#d4a373',g,11+i*len/7,5.5,1); c.userData.u=i/7; cartons.push(c); }
+  registerPick(g); }
+
+{ const g=zoneGroup('qc'); g.position.set(26,0,-28);
+  box(14,6,10,'#ffffff',g,0,0,0); box(14.5,.5,10.5,'#0d9488',g,0,6,0);
+  box(14.05,2,10.05,'#bfe3f2',g,0,2.6,0,{roughness:.15,metalness:.1});
+  box(3,1.6,2,'#cbd5e1',g,-3,6.5,-1); box(2,1.2,2,'#cbd5e1',g,2,6.5,1);
+  for(let i=0;i<3;i++) cyl(.35,1.3,'#e2e8f0',g,4.5,6.5,-3+i*1.4,10);
+  const carC=['#ef4444','#ffffff','#64748b','#2563eb','#f59e0b'];
+  for(let i=0;i<5;i++){ const cg=new THREE.Group(); cg.position.set(-8+i*3.6,0,8.5); g.add(cg);
+    box(1.8,.9,3.6,carC[i],cg,0,.35,0); box(1.6,.7,2,'#d8e6f3',cg,0,1.25,-.1,{roughness:.2}); }
+  registerPick(g); }
+
+{ const g=zoneGroup('fg'); g.position.set(36,0,9);
+  warehouse(g,24,11,18,'#2f6fe0','#255bc0',1,4); solar(g,20,14,12.1);
+  for(let i=0;i<3;i++) for(let j=0;j<2;j++){ box(2.4,.3,2.4,'#c79a62',g,-16+j*3,0,-6+i*3); box(2.2,1.6+((i+j)%2)*1.1,2.2,'#d4a373',g,-16+j*3,.3,-6+i*3); }
+  registerPick(g); }
+
+let clarArm;
+{ const g=zoneGroup('wwt'); g.position.set(48,0,-24);
+  [[-5,0,5],[6,0,4.2]].forEach(([x,z,r],i)=>{
+    mesh(new THREE.CylinderGeometry(r,r,2.2,40,1,true),M('#cbd5e1',{side:THREE.DoubleSide}),g,x,1.1,z);
+    mesh(new THREE.CylinderGeometry(r-.1,r-.1,.1,40),M(i?'#5ab0c8':'#6fae8f',{roughness:.2,metalness:.1}),g,x,1.8,z);
+  });
+  clarArm=new THREE.Group(); clarArm.position.set(-5,2.3,0); g.add(clarArm);
+  box(10,.3,.6,'#f2b705',clarArm,0,0,0); cyl(.5,1.4,'#64748b',g,-5,1.2,0,12);
+  box(4,3,3.5,'#e2e8f0',g,6,0,-8); box(4.3,.3,3.8,'#0d9488',g,6,3,-8);
+  registerPick(g); }
+
+function truck(color='#2563eb', trailer=true){
+  const t=new THREE.Group();
+  box(2.8,2.6,2.6,color,t,0,.6,0); box(.1,1,2.2,'#bfe3f2',t,1.42,1.9,0,{roughness:.2});
+  if(trailer){ box(7.5,3.2,2.7,'#f8fafc',t,-5.3,.9,0); box(7.52,.5,2.72,color,t,-5.3,1.6,0); }
+  const wM=M('#1f2937');
+  for(const x of (trailer?[.6,-3,-7.5]:[.6,-1])) for(const z of [-1.2,1.2]){ const w=mesh(new THREE.CylinderGeometry(.55,.55,.4,14),wM,t,x,.55,z); w.rotation.x=Math.PI/2; }
+  return t;
+}
+{ const g=zoneGroup('dock'); g.position.set(36,0,25);
+  box(26,.15,8,'#d5dbe3',g,0,0,0);
+  for(let i=0;i<4;i++) box(.2,.05,7,'#f2b705',g,-9+i*6,.15,0);
+  [[-6,'#2563eb'],[6,'#16a34a']].forEach(([x,c])=>{ const t=truck(c); t.rotation.y=-Math.PI/2; t.position.set(x,0,4.2); g.add(t); });
+  registerPick(g); }
+
+const movers=[];
+function follower(obj,pts,speed,offset=0,pingpong=false){
+  const segs=[]; let total=0;
+  const P=pts.map(p=>new THREE.Vector3(p[0],0,p[1]));
+  const n=pingpong?P.length-1:P.length;
+  for(let i=0;i<n;i++){ const a=P[i], b=P[(i+1)%P.length]; const l=a.distanceTo(b); segs.push({a,b,l,s:total}); total+=l; }
+  movers.push({obj,segs,total,speed,d:offset*total,pingpong,dir:1});
+  scene.add(obj);
+}
+function updateMovers(dt){
+  for(const m of movers){
+    if(m.pingpong){ m.d+=m.speed*dt*m.dir; if(m.d>m.total){m.d=m.total;m.dir=-1;} if(m.d<0){m.d=0;m.dir=1;} }
+    else m.d=(m.d+m.speed*dt)%m.total;
+    const seg=m.segs.find(s=>m.d>=s.s && m.d<=s.s+s.l)||m.segs[0];
+    const t=(m.d-seg.s)/seg.l;
+    m.obj.position.lerpVectors(seg.a,seg.b,t); m.obj.position.y=.4;
+    const dx=(seg.b.x-seg.a.x)*m.dir, dz=(seg.b.z-seg.a.z)*m.dir;
+    const target=Math.atan2(-dz,dx);
+    let diff=target-m.obj.rotation.y; diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+    m.obj.rotation.y+=diff*Math.min(1,dt*8);
+  }
+}
+function forklift(){
+  const f=new THREE.Group();
+  box(2,1,1.3,'#f59e0b',f,0,.3,0); box(.9,.6,1.2,'#374151',f,-.6,1.3,0);
+  box(.1,1.4,.1,'#374151',f,-.15,1.3,.55); box(.1,1.4,.1,'#374151',f,-.15,1.3,-.55); box(.9,.1,1.2,'#f59e0b',f,-.6,2.7,0);
+  box(.15,2.6,1,'#4b5563',f,1.1,.2,0); box(1.4,.1,.2,'#9ca3af',f,1.8,.4,.35); box(1.4,.1,.2,'#9ca3af',f,1.8,.4,-.35);
+  box(1.2,.2,1.2,'#c79a62',f,1.8,.5,0); box(1.1,1,1.1,'#d4a373',f,1.8,.7,0);
+  for(const x of [.6,-.6]) for(const z of [-.65,.65]){ const w=mesh(new THREE.CylinderGeometry(.35,.35,.25,12),M('#1f2937'),f,x,0,z); w.rotation.x=Math.PI/2; }
+  f.scale.setScalar(1.25);
+  return f;
+}
+follower(forklift(),[[-40,-9],[-40,-4.8],[-10,-4.8],[-10,-11]],5,0,true);
+follower(forklift(),[[6,15],[23,15]],4,.3,true);
+follower(forklift(),[[26,20],[46,20]],4.5,.6,true);
+follower(forklift(),[[-27,-18],[-27,-4.8],[-30,4]],3.5,.2,true);
+follower(truck('#2563eb'),[[-64,-40.4],[64,-40.4],[64,30.4],[-64,30.4]],9,0);
+follower(truck('#0d9488'),[[150,33.6],[-64.5,33.6],[-64.5,-43.6],[67.6,-43.6],[67.6,33.6]],10,.5);
+follower(truck('#f8fafc',false),[[-64,-2.5],[64,-2.5],[64,-5.5],[-64,-5.5]],7,.3);
+
+const smoke=[];
+for(let i=0;i<14;i++){ const s=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:'#ffffff',transparent:true,opacity:.6,roughness:1,depthWrite:false})); s.userData.t=i/14; scene.add(s); smoke.push(s); }
+
+const ring=new THREE.Mesh(new THREE.RingGeometry(1,1.06,64),new THREE.MeshBasicMaterial({color:'#2563eb',transparent:true,opacity:.85,side:THREE.DoubleSide}));
+ring.rotation.x=-Math.PI/2; ring.position.y=.5; scene.add(ring);
+const ringFill=new THREE.Mesh(new THREE.CircleGeometry(1,64),new THREE.MeshBasicMaterial({color:'#2563eb',transparent:true,opacity:.08,depthWrite:false}));
+ringFill.rotation.x=-Math.PI/2; ringFill.position.y=.45; scene.add(ringFill);
+const RING_R={raw:18,tankfarm:16,reactor:15,filling:14,qc:12,fg:17,wwt:13,dock:15};
+
+const pins={};
+for(const id of zoneIds){
+  const z=zones[id]; const el=document.createElement('div'); el.className='pin';
+  el.innerHTML='<div class="pin-card"><span class="pi">'+icon(z.icon,14)+'</span><span><b>'+z.name+'</b><small></small></span></div><div class="pin-stem"></div>';
+  el.addEventListener('click',e=>{e.stopPropagation(); select(id,true);});
+  const o=new CSS2DObject(el); o.center.set(.5,1); o.position.set(z.pos[0],z.h+2,z.pos[1]); scene.add(o);
+  pins[id]={el,o,base:z.h+2};
+}
+
+const $=s=>document.querySelector(s);
+let current=null, curBatch=0;
+
+function metricHTML(m){
+  return '<div class="metric"><div class="k">'+m.k+'</div><div class="v">'+fmt(m.v,m.d)+'<small>'+m.u+'</small></div>'+(m.bar?'<div class="bar"><i style="width:'+Math.min(100,m.v)+'%"></i></div>':'')+'</div>';
+}
+function sparkSVG(arr){
+  const W=300,H=74,p=6, mn=Math.min(...arr), mx=Math.max(...arr), r=(mx-mn)||1;
+  const pts=arr.map((v,i)=>[p+i*(W-2*p)/(arr.length-1), H-p-((v-mn)/r)*(H-2*p-8)]);
+  const line=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+  const last=pts[pts.length-1];
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".25"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="'+line+' L'+last[0]+' '+H+' L'+p+' '+H+' Z" fill="url(#g)"/><path d="'+line+'" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
+    '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="4" fill="#fff" stroke="#2563eb" stroke-width="2.2"/></svg>';
+}
+const batchForZone=id=>batches.findIndex(b=>STEPS[b.step][1]===id);
+
+function renderSide(){
+  const id=current, z=zones[id];
+  const bi=batchForZone(id), b=batches[bi];
+  $('#side').innerHTML=
+   '<div class="zhead"><div class="zicon">'+icon(z.icon,22)+'</div><div><h2>'+z.name+'</h2><p>'+z.en+'</p><span class="status '+z.status+'">● '+STATUS[z.status]+'</span></div></div>'+
+   '<p class="zdesc">'+z.desc+'</p>'+
+   '<div class="grid" id="mgrid">'+z.metrics.map(metricHTML).join('')+'</div>'+
+   '<div class="block"><h3>แนวโน้ม 12 ชั่วโมง <small>'+z.sparkLabel+'</small></h3><div class="spark" id="spark">'+sparkSVG(z.spark)+'</div></div>'+
+   (b?'<div class="block"><h3>แบตช์ในโซนนี้ <small>คลิกเพื่อติดตาม</small></h3><div class="batchcard" style="cursor:pointer" data-b="'+bi+'"><b>'+b.id+'</b> · '+b.prod+'<div class="meta"><span>'+b.size+' · '+STEPS[b.step][0]+'</span><span id="bpct">'+Math.round(b.pct)+'%</span></div><div class="prog"><i id="bbar" style="width:'+b.pct+'%"></i></div></div></div>':'')+
+   '<div class="block"><h3>'+z.listTitle+'</h3><div class="list">'+z.list.map(r=>
+     '<div class="row"><div class="nm"><b>'+r.n+'</b><small>'+r.s+'</small></div><div class="val"'+(r.low?' style="color:var(--amber)"':'')+'>'+r.v+'<div class="mini"><i style="width:'+r.p+'%;background:'+(r.low?'#f59e0b':'#16a34a')+'"></i></div></div></div>').join('')+'</div></div>';
+  const bc=$('#side .batchcard'); if(bc) bc.onclick=()=>{curBatch=+bc.dataset.b; renderBatch(); if(isSheet()) setPane('batch');};
+}
+function setPane(name){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===name));
+  document.querySelectorAll('.stab').forEach(b=>b.classList.toggle('on',b.dataset.pane===name));
+  document.getElementById('sheet').classList.remove('collapsed');
+}
+function renderZones(){
+  $('#zoneList').innerHTML=zoneIds.map(id=>{const z=zones[id]; const m=z.metrics[z.pinKey];
+    return '<div class="zone-item'+(id===current?' active':'')+'" data-z="'+id+'"><span class="dot '+z.status+'"></span><span class="nm">'+z.name+'<small>'+m.k+' '+fmt(m.v,m.d)+' '+m.u+'</small></span></div>';}).join('');
+  $('#zoneCount').textContent=zoneIds.filter(i=>zones[i].status==='ok').length+'/'+zoneIds.length+' ปกติ';
+  document.querySelectorAll('.zone-item').forEach(el=>el.onclick=()=>select(el.dataset.z,true));
+}
+function renderPins(){
+  for(const id of zoneIds){ const z=zones[id], p=pins[id], m=z.metrics[z.pinKey];
+    p.el.className='pin '+(z.status==='ok'?'':z.status)+(id===current?' active':'');
+    p.el.querySelector('small').textContent=m.k+' '+fmt(m.v,m.d)+' '+m.u; }
+}
+function renderKPIs(){
+  $('#kpis').innerHTML=kpis.map(k=>'<div class="kpi card"><div class="k">'+k.k+'</div><div class="v">'+fmt(k.v,k.dec)+'<small>'+k.u+'</small></div><div class="d '+(k.up?'up':'down')+'">'+k.d+' <span style="color:var(--muted);font-weight:400">เทียบเมื่อวาน</span></div></div>').join('');
+}
+function renderBatch(){
+  const b=batches[curBatch];
+  $('#btabs').innerHTML=batches.map((x,i)=>'<button class="btab'+(i===curBatch?' on':'')+'" data-i="'+i+'">'+x.id+'</button>').join('');
+  document.querySelectorAll('.btab').forEach(el=>el.onclick=()=>{curBatch=+el.dataset.i; renderBatch(); select(STEPS[batches[curBatch].step][1],true,false);});
+  $('#binfo').innerHTML='<b>'+b.prod+'</b><span>'+b.size+' · '+b.cust+'</span><span style="margin-left:auto;color:var(--blue);font-weight:600">'+STEPS[b.step][0]+' '+Math.round(b.pct)+'%</span>';
+  $('#steps').innerHTML=STEPS.map((s,i)=>{const cls=i<b.step?'done':i===b.step?'cur':'';
+    return '<div class="step '+cls+'" data-z="'+s[1]+'"><div class="c">'+(i<b.step?'✓':i+1)+'</div><div class="t">'+s[0]+'</div><div class="s">'+(i===b.step?'กำลังดำเนินการ':b.times[i])+'</div></div>';}).join('');
+  document.querySelectorAll('.step').forEach(el=>el.onclick=()=>select(el.dataset.z,true,false));
+}
+function renderTasks(){
+  const col={r:'#fdecec',a:'#fff4e0',b:'#e8f0ff',g:'#e7f7ec'};
+  $('#tasks').innerHTML=tasks.slice(0,12).map(t=>'<div class="task" data-z="'+t.zone+'"><div class="ic" style="background:'+col[t.t]+'">'+t.ic+'</div><div class="nm"><b>'+t.title+'</b><small>'+zones[t.zone].name+' · '+t.time+'</small></div><span class="tag '+t.t+'">'+t.tag+'</span></div>').join('');
+  $('#taskCount').textContent=tasks.slice(0,12).filter(t=>t.t!=='g').length+' รายการเปิดอยู่';
+  document.querySelectorAll('.task').forEach(el=>el.onclick=()=>select(el.dataset.z,true));
+}
+
+let anim=null;
+function flyTo(target,pos,dur=1.1){ anim={t:0,dur,f0:controls.target.clone(),f1:target,p0:camera.position.clone(),p1:pos}; }
+function select(id,fly,detail=true){
+  current=id; renderSide(); renderZones(); renderPins();
+  if(detail && isSheet()) setPane('side');
+  const z=zones[id]; ring.userData.r=RING_R[id];
+  ring.position.x=ringFill.position.x=z.pos[0]; ring.position.z=ringFill.position.z=z.pos[1];
+  if(fly){
+    const t=new THREE.Vector3(z.pos[0],2,z.pos[1]);
+    const dir=camera.position.clone().sub(controls.target).normalize();
+    dir.y=Math.max(dir.y,.55); dir.normalize();
+    flyTo(t,t.clone().add(dir.multiplyScalar(homeD*.56)));
+    setRotate(false);
+  }
+}
+function setRotate(on){ controls.autoRotate=on; $('#btnRotate').classList.toggle('on',on); }
+$('#btnHome').onclick=()=>{ const h=homePose(); flyTo(h.target,h.pos,1.3); };
+$('#btnRotate').onclick=()=>setRotate(!controls.autoRotate);
+$('#btnLabels').onclick=e=>{ document.body.classList.toggle('hide-labels'); e.currentTarget.classList.toggle('on'); };
+controls.addEventListener('start',()=>{anim=null;});
+
+$('#search').addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return; const q=e.target.value.trim().toLowerCase(); if(!q) return;
+  const bh=batches.findIndex(b=>(b.id+b.prod).toLowerCase().includes(q));
+  const hit=zoneIds.find(id=>{const z=zones[id]; return (z.name+z.en+z.desc+z.metrics.map(m=>m.k).join(' ')+z.list.map(r=>r.n+r.s).join(' ')).toLowerCase().includes(q);});
+  if(hit) select(hit,true);
+  else if(bh>=0){curBatch=bh; renderBatch(); select(STEPS[batches[bh].step][1],true);}
+  else toast('🔍','ไม่พบ "'+e.target.value+'"');
+  if(isSheet()) e.target.blur();
+});
+$('#btnSearch').onclick=()=>{ const h=$('header'); h.classList.toggle('searching'); if(h.classList.contains('searching')) $('#search').focus(); };
+$('#search').addEventListener('blur',()=>setTimeout(()=>$('header').classList.remove('searching'),150));
+
+// bottom sheet (tablet/mobile)
+const sheetEl=$('#sheet'); let grabY=null;
+document.querySelectorAll('.stab').forEach(b=>b.onclick=()=>setPane(b.dataset.pane));
+$('#grab').addEventListener('click',()=>sheetEl.classList.toggle('collapsed'));
+$('#grab').addEventListener('touchstart',e=>{grabY=e.touches[0].clientY;},{passive:true});
+$('#grab').addEventListener('touchend',e=>{ if(grabY==null) return; const dy=e.changedTouches[0].clientY-grabY; if(dy>30) sheetEl.classList.add('collapsed'); else if(dy<-30) sheetEl.classList.remove('collapsed'); grabY=null; });
+
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(); let downAt=null, hoverZone=null;
+function pick(e){ mouse.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1); ray.setFromCamera(mouse,camera); const h=ray.intersectObjects(pickables,false)[0]; return h?h.object.userData.zone:null; }
+renderer.domElement.addEventListener('pointerdown',e=>downAt=[e.clientX,e.clientY]);
+renderer.domElement.addEventListener('pointerup',e=>{ if(!downAt) return; if(Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])<5){ const z=pick(e); if(z) select(z,true);} downAt=null; });
+renderer.domElement.addEventListener('pointermove',e=>{ if(e.buttons) return; const z=pick(e); if(z!==hoverZone){ hoverZone=z; renderer.domElement.style.cursor=z?'pointer':''; } });
+
+let toastT;
+function toast(ic,msg,zone){ const el=$('#toast'); el.innerHTML='<span style="font-size:18px">'+ic+'</span><span>'+msg+'</span>'+(zone?'<button class="tbtn" style="flex:none;padding:0 10px">ดูโซน</button>':''); el.classList.add('show');
+  if(zone) el.querySelector('button').onclick=()=>{select(zone,true); el.classList.remove('show');};
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),5000); }
+
+const nowStr=()=>new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+function tick(){
+  for(const id of zoneIds) for(const m of zones[id].metrics){ if(m.j) m.v=Math.max(0,m.v+rnd(-m.j,m.j)); if(m.inc) m.v+=Math.round(rnd(0,m.inc*2)); }
+  kpis[0].v+=Math.round(rnd(2,9)); kpis[1].v=Math.min(99,Math.max(70,kpis[1].v+rnd(-.1,.1))); kpis[3].v+=rnd(.001,.004);
+  for(const b of batches){
+    if(b.step<5){ b.pct+=rnd(.3,1.2); if(b.pct>=100){ b.times[b.step]=nowStr(); b.step++; b.pct=3; toast('✅',b.id+' เข้าสู่ขั้นตอน "'+STEPS[b.step][0]+'"',STEPS[b.step][1]); if(current) renderSide(); } }
+    else b.pct=Math.min(100,b.pct+rnd(.2,.6));
+  }
+  if(current){ $('#mgrid').innerHTML=zones[current].metrics.map(metricHTML).join('');
+    const bi=batchForZone(current); if(bi>=0 && $('#bpct')){ $('#bpct').textContent=Math.round(batches[bi].pct)+'%'; $('#bbar').style.width=batches[bi].pct+'%'; } }
+  renderPins(); renderZones(); renderKPIs(); renderBatch();
+}
+function sparkTick(){
+  for(const id of zoneIds){ const s=zones[id].spark; const last=s[s.length-1]; const span=(Math.max(...s)-Math.min(...s))||1; s.push(+(last+rnd(-span*.15,span*.15)).toFixed(2)); s.shift(); }
+  if(current) $('#spark').innerHTML=sparkSVG(zones[current].spark);
+}
+
+const events=[
+  ()=>{zones.reactor.status='warn'; zones.reactor.metrics[0].v=46.8; tasks.unshift({t:'r',ic:'🌡️',title:'R-02 อุณหภูมิสูงกว่าเกณฑ์ (46.8°C > 45°C)',zone:'reactor',time:nowStr(),tag:'ด่วน'}); toast('🌡️','R-02 อุณหภูมิสูงกว่าเกณฑ์ ระบบเปิดน้ำหล่อเย็นอัตโนมัติ','reactor');
+       setTimeout(()=>{zones.reactor.status='ok'; zones.reactor.metrics[0].v=43.1; tasks.unshift({t:'g',ic:'✅',title:'R-02 อุณหภูมิกลับสู่ระดับปกติ',zone:'reactor',time:nowStr(),tag:'แก้ไขแล้ว'}); renderTasks(); renderZones(); renderPins(); if(current==='reactor') renderSide(); },14000);},
+  ()=>{zones.dock.metrics[0].v++; tasks.unshift({t:'g',ic:'🚚',title:'รถ 70-4821 ขึ้นสินค้าครบ ออกเดินทางไปนครสวรรค์',zone:'dock',time:nowStr(),tag:'เสร็จ'}); toast('🚚','รถ 70-4821 ออกจากโรงงานแล้ว','dock');},
+  ()=>{zones.qc.metrics[0].v++; tasks.unshift({t:'b',ic:'🧪',title:'ได้รับตัวอย่างใหม่จากไลน์บรรจุ L2',zone:'qc',time:nowStr(),tag:'รอตรวจ'}); toast('🧪','ห้อง QC ได้รับตัวอย่างใหม่ 1 รายการ','qc');},
+  ()=>{zones.tankfarm.status='warn'; zones.tankfarm.list[3].v='9.8 kL'; zones.tankfarm.list[3].p=19; tasks.unshift({t:'a',ic:'🛢️',title:'T-04 ปุ๋ยน้ำ Base ต่ำกว่า 20% ควรเติม',zone:'tankfarm',time:nowStr(),tag:'เติมถัง'}); toast('🛢️','ถัง T-04 ระดับต่ำกว่า 20%','tankfarm');
+       setTimeout(()=>{zones.tankfarm.status='ok'; zones.tankfarm.list[3].v='31.0 kL'; zones.tankfarm.list[3].p=62; renderZones(); renderPins(); if(current==='tankfarm') renderSide();},16000);},
+];
+let evI=0;
+function fireEvent(){ events[evI++%events.length](); renderTasks(); renderZones(); renderPins(); if(current) renderSide(); }
+
+const clock=new THREE.Clock();
+function animate(){
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  frameView();
+  if(anim){ anim.t+=dt/anim.dur; const e=anim.t>=1?1:1-Math.pow(1-anim.t,3);
+    controls.target.lerpVectors(anim.f0,anim.f1,e); camera.position.lerpVectors(anim.p0,anim.p1,e); if(anim.t>=1) anim=null; }
+  controls.update();
+  updateMovers(dt);
+  agitators.forEach((a,i)=>a.rotation.y+=dt*(3+i));
+  clarArm.rotation.y+=dt*.3;
+  for(const c of cartons){ c.userData.u=(c.userData.u+dt*.06)%1; c.position.x=11+c.userData.u*19; }
+  for(const s of smoke){ s.userData.t=(s.userData.t+dt*.08)%1; const k=s.userData.t;
+    s.position.set(smokeSrc.x+k*6+Math.sin(k*9+t)*.4,smokeSrc.y+k*14,smokeSrc.z-k*2); s.scale.setScalar(.6+k*2.6); s.material.opacity=.55*(1-k); }
+  const r=ring.userData.r||0, pulse=1+Math.sin(t*3)*.03;
+  ring.scale.setScalar(r*pulse); ringFill.scale.setScalar(r*pulse);
+  for(const id of zoneIds) pins[id].o.position.y=pins[id].base+(id===current?Math.sin(t*3)*.4:0);
+  renderer.render(scene,camera); labelRenderer.render(scene,camera);
+  requestAnimationFrame(animate);
+}
+
+let lastW=innerWidth, resizeT;
+addEventListener('resize',()=>{ frameView(); renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight);
+  clearTimeout(resizeT); resizeT=setTimeout(()=>{ if(Math.abs(innerWidth-lastW)>40){ lastW=innerWidth; const h=homePose(); flyTo(h.target,h.pos,.8); } },250); });
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('th-TH');},1000);
+
+renderKPIs(); renderBatch(); renderTasks(); select('reactor',false); setRotate(true);
+setInterval(tick,2000); setInterval(sparkTick,6000); setTimeout(()=>{fireEvent(); setInterval(fireEvent,18000);},7000);
+animate();
+const ld=$('#loading'); ld.style.opacity=0; setTimeout(()=>ld.remove(),600);
+</script>
+</body>
+</html>

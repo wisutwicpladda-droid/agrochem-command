@@ -1,0 +1,13 @@
+{
+  "name": "agrochem-command",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3D agrochemical factory control dashboard (mock data)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
